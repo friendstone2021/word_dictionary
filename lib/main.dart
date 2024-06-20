@@ -26,6 +26,7 @@ class MyApp extends StatelessWidget {
     return ScreenUtilInit(
       designSize: const Size(1440,768),
       builder: (context, widget) => MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Word Dictionary Application',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
