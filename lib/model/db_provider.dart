@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:word_dictionary/model/model_domain.dart';
@@ -16,9 +19,25 @@ class DbProvider {
   }
 
   initDB() async {
-    debugPrint('application document directory : ${await getApplicationDocumentsDirectory()}');
-    debugPrint('>>initDb : ${await getDatabasesPath()}');
-    String path = join(await getDatabasesPath(), 'dictionary.db');
+    // 애셋의 데이터베이스 파일 경로
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'dictionary.db');
+
+    // 데이터베이스가 존재하는지 확인하고 없으면 애셋에서 복사
+    final exists = await databaseExists(path);
+    if (!exists) {
+      try {
+        await Directory(dirname(path)).create(recursive: true);
+
+        // 애셋에서 데이터베이스 파일을 복사
+        final data = await rootBundle.load('db/dictionary.db');
+        final bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+        await File(path).writeAsBytes(bytes, flush: true);
+      } catch (e) {
+        debugPrint("Error copying database: $e");
+      }
+    }
+
     return await openDatabase(
       path,
       version: 1,
