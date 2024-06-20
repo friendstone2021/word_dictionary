@@ -1,9 +1,19 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'screen_layout.dart';
 
 void main() {
+
+  if (Platform.isWindows || Platform.isLinux) {
+    // Initialize FFI
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
   runApp(const MyApp());
 }
 
