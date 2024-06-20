@@ -53,6 +53,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^3.0.0
+  msix: ^3.16.7
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -97,3 +98,11 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+msix_config:
+  display_name: Flutter App
+  publisher_display_name: Company Name
+  identity_name: company.suite.flutterapp
+  msix_version: 1.0.0.0
+  logo_path: C:\path\to\logo.png
+  capabilities: internetClient, location, microphone, webcam
