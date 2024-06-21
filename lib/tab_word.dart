@@ -17,6 +17,8 @@ class TabWord extends StatefulWidget{
 
 class TabWordState extends State<TabWord> with AutomaticKeepAliveClientMixin{
 
+  TextStyle ts = const TextStyle(fontSize: 12);
+
   List<ModelWord> data = [];
 
   TextEditingController keywordController = TextEditingController();
@@ -71,14 +73,14 @@ class TabWordState extends State<TabWord> with AutomaticKeepAliveClientMixin{
               )),
           child: DataTable2(
             columnSpacing: 0,
-            columns: const [
-              DataColumn2(label: SelectableText('단어명', style: TextStyle(fontSize: 10)), size: ColumnSize.S),
-              DataColumn2(label: SelectableText('단어영문명', style: TextStyle(fontSize: 10)), size: ColumnSize.S),
-              DataColumn2(label: SelectableText('약어', style: TextStyle(fontSize: 10)), fixedWidth: 90),
-              DataColumn2(label: SelectableText('단어설명', style: TextStyle(fontSize: 10)), size: ColumnSize.L),
+            columns: [
+              DataColumn2(label: SelectableText('단어명', style: ts), size: ColumnSize.S),
+              DataColumn2(label: SelectableText('단어영문명', style: ts), size: ColumnSize.S),
+              DataColumn2(label: SelectableText('약어', style: ts), fixedWidth: 90),
+              DataColumn2(label: SelectableText('단어설명', style: ts), size: ColumnSize.L),
               // DataColumn2(label: SelectableText('형식\n단어\n여부'), size: ColumnSize.S),
-              DataColumn2(label: SelectableText('표준\n도메인', style: TextStyle(fontSize: 10)), fixedWidth: 90),
-              DataColumn2(label: SelectableText('이음동의어', style: TextStyle(fontSize: 10)), fixedWidth: 90),
+              DataColumn2(label: SelectableText('표준\n도메인', style: ts), fixedWidth: 90),
+              DataColumn2(label: SelectableText('이음동의어', style: ts), fixedWidth: 90),
             ],
             // rows: rowData,
             rows : data.isEmpty ? [] : List<DataRow2>.generate(data.length, (index) => makeRow(data.elementAt(index))),
@@ -163,12 +165,12 @@ class TabWordState extends State<TabWord> with AutomaticKeepAliveClientMixin{
         });
       },
       cells: [
-        DataCell(SelectableText(item.word as String, style: const TextStyle(fontSize: 10))),
-        DataCell(SelectableText(item.word_eng as String, style: const TextStyle(fontSize: 10))),
-        DataCell(SelectableText(item.word_short as String, style: const TextStyle(fontSize: 10))),
-        DataCell(SelectableText(item.word_desc as String, style: const TextStyle(fontSize: 10))),
-        DataCell(SelectableText(item.domain as String, style: const TextStyle(fontSize: 10))),
-        DataCell(SelectableText(item.word_same as String, style: const TextStyle(fontSize: 10))),
+        DataCell(SelectableText(item.word as String, style: ts)),
+        DataCell(SelectableText(item.word_eng as String, style: ts)),
+        DataCell(SelectableText(item.word_short as String, style: ts)),
+        DataCell(SelectableText(item.word_desc as String, style: ts)),
+        DataCell(SelectableText(item.domain as String, style: ts)),
+        DataCell(SelectableText(item.word_same as String, style: ts)),
       ]
     );
   }
