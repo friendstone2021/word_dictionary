@@ -230,7 +230,7 @@ class DbProvider {
     return list;
   }
 
-  Future<bool> checkDuplicateWord(ModelWord model, BuildContext context) async{
+  Future<bool> checkDuplicateWord(ModelWord model, BuildContext? context) async{
     final db = await database;
     List<Map<String, dynamic>> word = await db!.rawQuery('SELECT word FROM WORD WHERE word = ?',[model.word]);
     List<Map<String, dynamic>> word_same = await db!.rawQuery('SELECT word_same FROM WORD WHERE word_same like ?',['%${model.word}%']);
@@ -247,67 +247,73 @@ class DbProvider {
     }
 
     if(word.isNotEmpty) {
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              content: const Text('이미 같은 단어가 존재합니다.'),
-              actions: [
-                new ElevatedButton(
-                  child: const Text("확인"),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                )
-              ],
-            );
-          }
-      );
+      if(context != null) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: const Text('이미 같은 단어가 존재합니다.'),
+                actions: [
+                  ElevatedButton(
+                    child: const Text("확인"),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              );
+            }
+        );
+      }
       return false;
     }else if(existSame){
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              content: const Text('이음동의어에 같은 단어가 존재합니다.'),
-              actions: [
-                new ElevatedButton(
-                  child: const Text("확인"),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                )
-              ],
-            );
-          }
-      );
+      if(context != null) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: const Text('이음동의어에 같은 단어가 존재합니다.'),
+                actions: [
+                  ElevatedButton(
+                    child: const Text("확인"),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              );
+            }
+        );
+      }
       return false;
     }else{
       return true;
     }
   }
 
-  Future<bool> checkDuplicateDomain(ModelDomain model, BuildContext context) async{
+  Future<bool> checkDuplicateDomain(ModelDomain model, BuildContext? context) async{
     final db = await database;
     List<Map<String, dynamic>> word = await db!.rawQuery('SELECT domain_name FROM DOMAIN WHERE domain_name = ?',[model.domain_name]);
 
     if(word.isNotEmpty) {
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              content: const Text('이미 같은 도메인이 존재합니다.'),
-              actions: [
-                new ElevatedButton(
-                  child: const Text("확인"),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                )
-              ],
-            );
-          }
-      );
+      if(context != null) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: const Text('이미 같은 도메인이 존재합니다.'),
+                actions: [
+                  ElevatedButton(
+                    child: const Text("확인"),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              );
+            }
+        );
+      }
       return false;
     }else{
       return true;
@@ -315,7 +321,7 @@ class DbProvider {
 
   }
 
-  Future<bool> checkDuplicateGlossary(ModelGlossary model, BuildContext context) async{
+  Future<bool> checkDuplicateGlossary(ModelGlossary model, BuildContext? context) async{
     final db = await database;
     List<Map<String, dynamic>> word = await db!.rawQuery('SELECT glossary_name FROM GLOSSARY WHERE glossary_name = ?',[model.glossary_name]);
     List<Map<String, dynamic>> word_same = await db!.rawQuery('SELECT glossary_same FROM GLOSSARY WHERE glossary_same like ?',['%${model.glossary_name}%']);
@@ -332,40 +338,44 @@ class DbProvider {
     }
 
     if(word.isNotEmpty) {
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              content: const Text('이미 같은 용어가 존재합니다.'),
-              actions: [
-                new ElevatedButton(
-                  child: const Text("확인"),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                )
-              ],
-            );
-          }
-      );
+      if(context != null) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: const Text('이미 같은 용어가 존재합니다.'),
+                actions: [
+                  ElevatedButton(
+                    child: const Text("확인"),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              );
+            }
+        );
+      }
       return false;
     }else if(existSame){
-      showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              content: const Text('이음동의어에 같은 단어가 존재합니다.'),
-              actions: [
-                new ElevatedButton(
-                  child: const Text("확인"),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                )
-              ],
-            );
-          }
-      );
+      if(context != null) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: const Text('이음동의어에 같은 단어가 존재합니다.'),
+                actions: [
+                  ElevatedButton(
+                    child: const Text("확인"),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              );
+            }
+        );
+      }
       return false;
     }else{
       return true;

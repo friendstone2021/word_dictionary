@@ -17,11 +17,14 @@ class ModalEditDomain extends StatefulWidget{
 
 class ModalEditDomainState extends State<ModalEditDomain>{
 
+  final dataTypeList = ['','CHAR','VARCHAR','NUMERIC','DATETIME','LOB'];
+  var selected_data_type = '';
+
   TextEditingController controller_domain_grp = TextEditingController();
   TextEditingController controller_domain_type = TextEditingController();
   TextEditingController controller_domain_name = TextEditingController();
   TextEditingController controller_domain_desc = TextEditingController();
-  TextEditingController controller_data_type = TextEditingController();
+  // TextEditingController controller_data_type = TextEditingController();
   TextEditingController controller_data_length1 = TextEditingController();
   TextEditingController controller_data_length2 = TextEditingController();
   TextEditingController controller_data_save_form = TextEditingController();
@@ -39,7 +42,7 @@ class ModalEditDomainState extends State<ModalEditDomain>{
       controller_domain_type.text = widget.model?.domain_type as String;
       controller_domain_name.text = widget.model?.domain_name as String;
       controller_domain_desc.text = widget.model?.domain_desc as String;
-      controller_data_type.text = widget.model?.data_type as String;
+      selected_data_type = widget.model?.data_type as String;
       controller_data_length1.text = '${widget.model?.data_length1 ?? ''}';
       controller_data_length2.text = '${widget.model?.data_length2 ?? ''}';
       controller_data_save_form.text = widget.model?.data_save_form as String;
@@ -107,9 +110,23 @@ class ModalEditDomainState extends State<ModalEditDomain>{
                       width: 100,
                       child: Text('데이터타입'),
                     ),
-                    Expanded(
-                      child: TextField(controller: controller_data_type)
-                    )
+                    // Expanded(
+                    //   child:
+                      DropdownButton(
+                        value: selected_data_type,
+                        items: dataTypeList.map((value){
+                          return DropdownMenuItem(
+                            value: value,
+                            child: Text(value)
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selected_data_type = value!;
+                          });
+                        },
+                      )
+                    // )
                   ],
                 ),
                 Row(
@@ -195,7 +212,7 @@ class ModalEditDomainState extends State<ModalEditDomain>{
                       domain_type: controller_domain_type.text,
                       domain_name: controller_domain_name.text,
                       domain_desc: controller_domain_desc.text,
-                      data_type: controller_data_type.text,
+                      data_type: selected_data_type,
                       data_length1: controller_data_length1.text.isEmpty?null:int.parse(controller_data_length1.text),
                       data_length2: controller_data_length2.text.isEmpty?null:int.parse(controller_data_length2.text),
                       data_save_form: controller_data_save_form.text,
@@ -203,10 +220,12 @@ class ModalEditDomainState extends State<ModalEditDomain>{
                       unit: controller_unit.text,
                       allow: controller_allow.text,
                     );
-                    db.insertDomain(newModel, context).then((value){
+
+                    db.checkDuplicateDomain(newModel, context).then((value){
                       if(value){
+                        Navigator.pop(context, newModel);
+                      }else{
                         widget.model = newModel;
-                        Navigator.pop(context);
                       }
                     });
                   }else{
@@ -214,15 +233,19 @@ class ModalEditDomainState extends State<ModalEditDomain>{
                     widget.model?.domain_type = controller_domain_type.text;
                     widget.model?.domain_name = controller_domain_name.text;
                     widget.model?.domain_desc = controller_domain_desc.text;
-                    widget.model?.data_type = controller_data_type.text;
+                    widget.model?.data_type = selected_data_type;
                     widget.model?.data_length1 = controller_data_length1.text.isEmpty?null:int.parse(controller_data_length1.text);
                     widget.model?.data_length2 = controller_data_length2.text.isEmpty?null:int.parse(controller_data_length2.text);
                     widget.model?.data_save_form = controller_data_save_form.text;
                     widget.model?.data_exprs_form = controller_data_exprs_form.text;
                     widget.model?.unit = controller_unit.text;
                     widget.model?.allow = controller_allow.text;
-                    db.updateDomain(widget.model!,context).then((value){
-                      Navigator.pop(context);
+
+                    db.checkDuplicateDomain(widget.model!, context).then((value){
+                      if(value){
+                        widget.model?.error = !value;
+                        Navigator.pop(context, widget.model);
+                      }
                     });
                   }
                 },

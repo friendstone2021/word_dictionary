@@ -8,6 +8,7 @@ class ModelWord {
   String? domain;
   String? word_same;
   bool selected = false;
+  bool error = false;
 
   ModelWord({
     this.id,
@@ -30,7 +31,8 @@ class ModelWord {
       'is_form_word' : is_form_word,
       'domain' : domain,
       'word_same' : word_same,
-      'selected' : selected
+      'selected' : selected,
+      'error' : error
     };
   }
 }

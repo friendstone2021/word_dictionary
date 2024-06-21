@@ -9,6 +9,7 @@ class ModelGlossary {
   String? data_exprs_form;
   String? glossary_same;
   bool selected = false;
+  bool error = false;
 
   ModelGlossary({
     this.id,
@@ -33,7 +34,8 @@ class ModelGlossary {
       'data_save_form' : data_save_form,
       'data_exprs_form' : data_exprs_form,
       'glossary_same' : glossary_same,
-      'selected' : selected
+      'selected' : selected,
+      'error' : error
     };
   }
 }

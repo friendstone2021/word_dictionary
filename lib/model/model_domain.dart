@@ -12,6 +12,7 @@ class ModelDomain {
   String? unit;
   String? allow;
   bool selected = false;
+  bool error = false;
 
   ModelDomain({
     this.id,
@@ -42,7 +43,8 @@ class ModelDomain {
       'data_exprs_form' : data_exprs_form,
       'unit' : unit,
       'allow' : allow,
-      'selected' : selected
+      'selected' : selected,
+      'error' : error
     };
   }
 }

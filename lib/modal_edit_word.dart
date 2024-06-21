@@ -152,13 +152,14 @@ class ModalEditWordState extends State<ModalEditWord>{
                       domain: controller_domain.text,
                       word_same: controller_word_same.text
                     );
-                    db.insertWord(newModel, context)
-                      .then((value){
-                        if(value){
-                          widget.model = newModel;
-                          Navigator.pop(context);
-                        }
-                      });
+
+                    db.checkDuplicateWord(newModel, context).then((value){
+                      if(value){
+                        Navigator.pop(context, newModel);
+                      }else{
+                        widget.model = newModel;
+                      }
+                    });
                   }else{
                     widget.model?.word = controller_word.text;
                     widget.model?.word_eng = controller_word_eng.text;
@@ -166,11 +167,13 @@ class ModalEditWordState extends State<ModalEditWord>{
                     widget.model?.word_desc = controller_word_desc.text;
                     widget.model?.domain = controller_domain.text;
                     widget.model?.word_same = controller_word_same.text;
-                    db.updateWord(widget.model!, context).then((value){
-                        if(value){
-                          Navigator.pop(context);
-                        }
-                      });
+
+                    db.checkDuplicateWord(widget.model!, context).then((value){
+                      if(value){
+                        widget.model?.error = !value;
+                        Navigator.pop(context, widget.model);
+                      }
+                    });
                   }
                 },
                 child: const Text('저장')

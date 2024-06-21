@@ -1,22 +1,26 @@
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:word_dictionary/model/model_glossary.dart';
-import 'package:word_dictionary/util/util_convert.dart';
 
-import 'modal_edit_convert.dart';
+import 'modal_edit_glossary.dart';
+import 'modal_edit_word.dart';
 import 'model/db_provider.dart';
+import 'model/model_glossary.dart';
+import 'model/model_word.dart';
 import 'util/util_excel.dart';
 
-class TabConvert extends StatefulWidget{
-  const TabConvert({super.key});
+class ModalUploadGlossary extends StatefulWidget{
+
+  final List<ModelGlossary> data;
+
+  const ModalUploadGlossary({super.key, required this.data});
 
   @override
-  State<StatefulWidget> createState() => TabWordState();
+  State<StatefulWidget> createState() => ModalUploadGlossaryState();
 
 }
 
-class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
+class ModalUploadGlossaryState extends State<ModalUploadGlossary>{
 
   TextStyle ts_s = const TextStyle(fontSize: 10);
   TextStyle ts_m = const TextStyle(fontSize: 12);
@@ -26,15 +30,12 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
 
   List<ModelGlossary> data = [];
 
-  TextEditingController keywordController = TextEditingController();
   DbProvider db = DbProvider();
-
-  @override
-  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     textStyle = ts_m;
+    data = widget.data;
     super.initState();
   }
 
@@ -42,7 +43,7 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: EdgeInsets.all(5),
+        padding: const EdgeInsets.all(5),
         child: Theme(
           // Using themes to override scroll bar appearence, note that iOS scrollbars do not support color overrides
           data: ThemeData(
@@ -125,13 +126,11 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
                   onPressed: (){
                     showDialog(context: context, builder: (context){
                       return Dialog(
-                        child: ModalEditConvert(),
+                        child: ModalEditWord(),
                       );
-                    }).then((item){
+                    }).then((value){
                       setState(() {
-                        if(!data.contains(item)){
-                          data.add(item);
-                        }
+                        data.add(value);
                       });
                     });
                   },
@@ -147,23 +146,49 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
                   },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.upload, color: Colors.black,),
-                  onPressed: (){
-                    UtilExcel().loadConvertExcel().then((result){
-                      setState(() {
-                        data = result;
-                      });
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.transform, color: Colors.black,),
-                  onPressed: (){
-                    UtilConvert().convertGlossary(data).then((result){
-                      setState(() {
-                        data = result;
-                      });
-                    });
+                  icon: const Icon(Icons.save_alt, color: Colors.black,),
+                  onPressed: () async{
+                    var existsError = false;
+                    for(var item in data){
+                      if(item.selected && item.error){
+                        existsError = true;
+                        break;
+                      }
+                    }
+                    if(existsError){
+                      showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              content: const Text('데이터에 오류가 있습니다.'),
+                              actions: [
+                                ElevatedButton(
+                                  child: const Text("확인"),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                )
+                              ],
+                            );
+                          }
+                      );
+                    }else{
+                      List<ModelGlossary> deleteList = [];
+                      for(var item in data){
+                        if(item.selected) {
+                          var isSuccess = await db.insertGlossary(item, context);
+                          if(isSuccess){
+                            deleteList.add(item);
+                          }
+                        }
+                      }
+                      for(var item in deleteList){
+                        data.remove(item);
+                      }
+                      if(data.isEmpty) {
+                        Navigator.pop(context);
+                      }
+                    }
                   },
                 ),
                 IconButton(
@@ -174,39 +199,19 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
                       excelData.add(row.toMap());
                     }
                     UtilExcel().downloadExcel(
-                      "CONVERT",
+                      "GLOSSARY",
                       ["용어명","용어설명","약어","도메인","허용값","저장형식","표현형식","동의어"],
                       ["glossary_name","glossary_desc","glossary_short","glossary_domain","allow","data_save_form","data_exprs_form","glossary_same"],
                       excelData
                     );
                   },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.save_alt, color: Colors.black,),
-                  onPressed: () async {
-                    List<ModelGlossary> successList = [];
-                    for(var item in data){
-                      if(item.selected){
-                        bool isSuccess = await db.insertGlossary(item, context);
-                        if(!isSuccess){
-                          break;
-                        }else{
-                          successList.add(item);
-                        }
-                      }
-                    }
-                    for(var removeItem in successList){
-                      setState(() {
-                        data.remove(removeItem);
-                      });
-                    }
-                  },
-                ),
+                )
               ],
             )
-          ]
+          ],
         )
-      )
+
+      ),
     );
   }
 
@@ -218,12 +223,17 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
           item.selected = check!;
         });
       },
+      decoration: item.error ? const BoxDecoration(color: Colors.pinkAccent) : null,
       onTap: (){
         showDialog(context: context, builder: (context){
           debugPrint(item.toMap().toString());
           return Dialog(
-            child: ModalEditConvert(model: item),
+            child: ModalEditGlossary(model: item),
           );
+        }).then((value){
+          setState(() {
+            data.setAll(data.indexOf(item), [value]);
+          });
         });
       },
       cells: [
@@ -238,4 +248,5 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
       ]
     );
   }
+
 }

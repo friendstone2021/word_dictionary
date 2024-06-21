@@ -178,10 +178,11 @@ class ModalEditGlossaryState extends State<ModalEditGlossary> {
                       data_exprs_form: controller_data_exprs_form.text,
                       glossary_same: controller_glossary_same.text,
                     );
-                    db.insertGlossary(newModel, context).then((value){
+                    db.checkDuplicateGlossary(newModel, context).then((value){
                       if(value){
-                        widget.model = newModel;
                         Navigator.pop(context, newModel);
+                      }else{
+                        widget.model = newModel;
                       }
                     });
                   }else{
@@ -193,8 +194,11 @@ class ModalEditGlossaryState extends State<ModalEditGlossary> {
                     widget.model?.data_save_form = controller_data_save_form.text;
                     widget.model?.data_exprs_form = controller_data_exprs_form.text;
                     widget.model?.glossary_same = controller_glossary_same.text;
-                    db.updateGlossary(widget.model!, context).then((value){
-                      Navigator.pop(context, widget.model);
+                    db.checkDuplicateGlossary(widget.model!, context).then((value){
+                      if(value){
+                        widget.model?.error = !value;
+                        Navigator.pop(context, widget.model);
+                      }
                     });
                   }
                 },

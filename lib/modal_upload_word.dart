@@ -1,22 +1,24 @@
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:word_dictionary/model/model_glossary.dart';
-import 'package:word_dictionary/util/util_convert.dart';
 
-import 'modal_edit_convert.dart';
+import 'modal_edit_word.dart';
 import 'model/db_provider.dart';
+import 'model/model_word.dart';
 import 'util/util_excel.dart';
 
-class TabConvert extends StatefulWidget{
-  const TabConvert({super.key});
+class ModalUploadWord extends StatefulWidget{
+
+  final List<ModelWord> data;
+
+  const ModalUploadWord({super.key, required this.data});
 
   @override
-  State<StatefulWidget> createState() => TabWordState();
+  State<StatefulWidget> createState() => ModalUploadWordState();
 
 }
 
-class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
+class ModalUploadWordState extends State<ModalUploadWord>{
 
   TextStyle ts_s = const TextStyle(fontSize: 10);
   TextStyle ts_m = const TextStyle(fontSize: 12);
@@ -24,17 +26,14 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
 
   late TextStyle textStyle;
 
-  List<ModelGlossary> data = [];
+  List<ModelWord> data = [];
 
-  TextEditingController keywordController = TextEditingController();
   DbProvider db = DbProvider();
-
-  @override
-  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     textStyle = ts_m;
+    data = widget.data;
     super.initState();
   }
 
@@ -42,7 +41,7 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: EdgeInsets.all(5),
+        padding: const EdgeInsets.all(5),
         child: Theme(
           // Using themes to override scroll bar appearence, note that iOS scrollbars do not support color overrides
           data: ThemeData(
@@ -55,13 +54,12 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
           child: DataTable2(
             columnSpacing: 0,
             columns: [
-              DataColumn2(label: SelectableText('용어명', style: textStyle), size: ColumnSize.S),
-              DataColumn2(label: SelectableText('용어설명', style: textStyle), size: ColumnSize.L),
-              DataColumn2(label: SelectableText('약어', style: textStyle), fixedWidth: 120),
-              DataColumn2(label: SelectableText('도메인', style: textStyle), fixedWidth: 90),
-              DataColumn2(label: SelectableText('허용값', style: textStyle), size: ColumnSize.M),
-              DataColumn2(label: SelectableText('저장형식', style: textStyle), size: ColumnSize.M),
-              DataColumn2(label: SelectableText('표현형식', style: textStyle), size: ColumnSize.M),
+              DataColumn2(label: SelectableText('단어명', style: textStyle), size: ColumnSize.S),
+              DataColumn2(label: SelectableText('단어영문명', style: textStyle), size: ColumnSize.S),
+              DataColumn2(label: SelectableText('약어', style: textStyle), fixedWidth: 90),
+              DataColumn2(label: SelectableText('단어설명', style: textStyle), size: ColumnSize.L),
+              // DataColumn2(label: SelectableText('형식\n단어\n여부'), size: ColumnSize.S),
+              DataColumn2(label: SelectableText('표준\n도메인', style: textStyle), fixedWidth: 90),
               DataColumn2(label: SelectableText('이음동의어', style: textStyle), fixedWidth: 90),
             ],
             // rows: rowData,
@@ -125,13 +123,11 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
                   onPressed: (){
                     showDialog(context: context, builder: (context){
                       return Dialog(
-                        child: ModalEditConvert(),
+                        child: ModalEditWord(),
                       );
-                    }).then((item){
+                    }).then((value){
                       setState(() {
-                        if(!data.contains(item)){
-                          data.add(item);
-                        }
+                        data.add(value);
                       });
                     });
                   },
@@ -147,23 +143,49 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
                   },
                 ),
                 IconButton(
-                  icon: const Icon(Icons.upload, color: Colors.black,),
-                  onPressed: (){
-                    UtilExcel().loadConvertExcel().then((result){
-                      setState(() {
-                        data = result;
-                      });
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.transform, color: Colors.black,),
-                  onPressed: (){
-                    UtilConvert().convertGlossary(data).then((result){
-                      setState(() {
-                        data = result;
-                      });
-                    });
+                  icon: const Icon(Icons.save_alt, color: Colors.black,),
+                  onPressed: () async{
+                    var existsError = false;
+                    for(var item in data){
+                      if(item.selected && item.error){
+                        existsError = true;
+                        break;
+                      }
+                    }
+                    if(existsError){
+                      showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              content: const Text('데이터에 오류가 있습니다.'),
+                              actions: [
+                                ElevatedButton(
+                                  child: const Text("확인"),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                )
+                              ],
+                            );
+                          }
+                      );
+                    }else{
+                      List<ModelWord> deleteList = [];
+                      for(var item in data){
+                        if(item.selected) {
+                          var isSuccess = await db.insertWord(item, context);
+                          if(isSuccess){
+                            deleteList.add(item);
+                          }
+                        }
+                      }
+                      for(var item in deleteList){
+                        data.remove(item);
+                      }
+                      if(data.isEmpty) {
+                        Navigator.pop(context);
+                      }
+                    }
                   },
                 ),
                 IconButton(
@@ -174,43 +196,23 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
                       excelData.add(row.toMap());
                     }
                     UtilExcel().downloadExcel(
-                      "CONVERT",
-                      ["용어명","용어설명","약어","도메인","허용값","저장형식","표현형식","동의어"],
-                      ["glossary_name","glossary_desc","glossary_short","glossary_domain","allow","data_save_form","data_exprs_form","glossary_same"],
+                      "WORD",
+                      ["단어명","단어영문명","약어","단어설명","표준도메인","이음동의어"],
+                      ["word","word_eng","word_short","word_desc","domain","word_same"],
                       excelData
                     );
                   },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.save_alt, color: Colors.black,),
-                  onPressed: () async {
-                    List<ModelGlossary> successList = [];
-                    for(var item in data){
-                      if(item.selected){
-                        bool isSuccess = await db.insertGlossary(item, context);
-                        if(!isSuccess){
-                          break;
-                        }else{
-                          successList.add(item);
-                        }
-                      }
-                    }
-                    for(var removeItem in successList){
-                      setState(() {
-                        data.remove(removeItem);
-                      });
-                    }
-                  },
-                ),
+                )
               ],
             )
-          ]
+          ],
         )
-      )
+
+      ),
     );
   }
 
-  makeRow(ModelGlossary item){
+  makeRow(ModelWord item){
     return DataRow2(
       selected: item.selected,
       onSelectChanged: (check){
@@ -218,24 +220,28 @@ class TabWordState extends State<TabConvert> with AutomaticKeepAliveClientMixin{
           item.selected = check!;
         });
       },
+      decoration: item.error ? const BoxDecoration(color: Colors.pinkAccent) : null,
       onTap: (){
         showDialog(context: context, builder: (context){
           debugPrint(item.toMap().toString());
           return Dialog(
-            child: ModalEditConvert(model: item),
+            child: ModalEditWord(model: item),
           );
+        }).then((value){
+          setState(() {
+            data.setAll(data.indexOf(item), [value]);
+          });
         });
       },
       cells: [
-        DataCell(SelectableText(item.glossary_name as String, style: textStyle)),
-        DataCell(SelectableText(item.glossary_desc as String, style: textStyle)),
-        DataCell(SelectableText(item.glossary_short as String, style: textStyle)),
-        DataCell(SelectableText(item.glossary_domain as String, style: textStyle)),
-        DataCell(SelectableText(item.allow as String, style: textStyle)),
-        DataCell(SelectableText(item.data_save_form as String, style: textStyle)),
-        DataCell(SelectableText(item.data_exprs_form as String, style: textStyle)),
-        DataCell(SelectableText(item.glossary_same as String, style: textStyle)),
+        DataCell(SelectableText(item.word as String, style: textStyle)),
+        DataCell(SelectableText(item.word_eng as String, style: textStyle)),
+        DataCell(SelectableText(item.word_short as String, style: textStyle)),
+        DataCell(SelectableText(item.word_desc as String, style: textStyle)),
+        DataCell(SelectableText(item.domain as String, style: textStyle)),
+        DataCell(SelectableText(item.word_same as String, style: textStyle)),
       ]
     );
   }
+
 }
